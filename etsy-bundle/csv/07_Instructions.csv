@@ -1,0 +1,36 @@
+CONTRACTOR COMPARISON & BID TRACKER — INSTRUCTIONS,,,,
+"Tab 7 of 7 | Plain-English guide for homeowners | Follow steps in order for best results",,,,
+,,,,
+HOW TO USE THIS TRACKER — STEP BY STEP,,,,
+Step,When,What to Do,Tab to Use,Tips
+1,Before getting bids,"Fill in Project Information on Dashboard: project name, address, type, budget, and target dates",Dashboard,"Be specific about your scope. Vague projects get vague bids."
+2,Before getting bids,"Identify 3–5 contractors to contact. Ask neighbors, check Houzz, Angi, or your local building supply store for referrals",Dashboard,"More bids = better comparison. Aim for at least 3."
+3,As bids come in,"Enter each contractor's bid details in Bid Comparison: materials, labor, expiry date, timeline, and payment terms",Bid Comparison,"Ask every contractor to break out materials vs. labor — it's easier to compare apples to apples."
+4,As bids come in,"Add Total Bid formula in column I (=G+H) so totals calculate automatically",Bid Comparison,"Paste the formula in row 2 then drag it down to row 11."
+5,After receiving 2+ bids,"Check the Expiry Status and Materials Flag columns for automatic alerts",Bid Comparison,"EXPIRING SOON = call the contractor to request an extension before it lapses."
+6,During or after interviews,"Score each contractor in Contractor Scoring: price is auto-calculated; enter 0–100 for the other four categories",Contractor Scoring,"Score these right after each contractor meeting while impressions are fresh."
+7,After all interviews,"Review the Weighted Total and Rank columns — the highest-ranked contractor is your top pick on paper",Contractor Scoring,"'Top pick on paper' may not be your gut pick. That's what the Gut Feel score is for."
+8,Before final selection,"Call 2–3 references for your top 2 contractors. Log your notes in Reference Check Log",Reference Check Log,"Always ask: 'Would you hire them again?' and 'Is there anything you wish you'd known?'"
+9,Before signing,"Verify license and insurance for every contractor you seriously consider. Log results in License & Insurance",License & Insurance,"Never skip this. An uninsured contractor working on your home = your liability."
+10,Before signing,"Work through all 10 items in the Contract Checklist. Do not sign until every item is verified",Contract Checklist,"If a contractor resists any item on the checklist, that resistance itself is a red flag."
+11,After signing,"Return to Dashboard and record your final decision: recommended hire, decision date, and notes",Dashboard,"File a copy of the signed contract and all COIs in a folder with this tracker."
+,,,,
+COMMON MISTAKES TO AVOID,,,,
+Mistake,Why It's Risky,What to Do Instead,,
+Choosing the lowest bid automatically,"Low bids sometimes mean cut corners on materials, unlicensed subcontractors, or a contractor who underestimates the job and asks for more money mid-project","Use the weighted scoring system to balance price with quality, timeline, and references",,
+Paying more than 30% upfront,"If the contractor abandons the job or goes out of business, you lose that money","Structure payments to milestones: 10–15% down, progress payments, 10% retention at completion",,
+Not verifying insurance yourself,"Contractors can show expired certificates or list themselves on old policies","Request the Certificate of Insurance be sent directly from the insurance carrier to you",,
+Skipping the reference check,"Online reviews can be gamed; direct conversations with past clients cannot","Call at least 2–3 references for any contractor you seriously consider",,
+Signing a one-page contract,"A one-page contract rarely covers scope, change orders, timeline, or dispute resolution adequately","Use the Contract Checklist to ensure all key terms are in the signed document",,
+Letting permits slide,"Unpermitted work can block your home sale, fail inspection, or void your homeowner's insurance","Verify the contractor will pull permits in their name before any work begins",,
+,,,,
+RENOVATION TIMELINE GUIDE — Typical project durations for planning,,,,
+Project Type,Small (weeks),Medium (weeks),Large (weeks),Notes
+Kitchen remodel,3–4,6–10,12–20+,"Full gut = longer; cabinet refacing = shorter"
+Bathroom remodel,2–3,4–6,8–12,"Master bath additions add significant time"
+Roof replacement,1–2,1–2,2–3,"Weather delays are the most common issue"
+HVAC replacement,1–2,2–3,3–4,"Permits and inspections add time"
+Flooring (whole house),1–2,2–3,3–5,"Hardwood refinishing vs. new install varies greatly"
+Home addition,8–12,12–20,20–36+,"Permitting alone can take 4–12 weeks"
+Exterior painting,1–2,2–3,3–5,"Prep time drives most of the schedule"
+Basement finish,4–8,8–16,16–24+,"Egress window and waterproofing add complexity"
