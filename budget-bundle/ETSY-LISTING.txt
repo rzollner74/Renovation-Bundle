@@ -1,0 +1,162 @@
+==============================================================
+ETSY LISTING — Home Renovation Budget Tracker
+==============================================================
+
+TITLE (109 chars):
+Home Renovation Budget Tracker | Google Sheets Template | Budget Planner | Homeowner Tool | Digital Download
+
+CATEGORY:
+Craft Supplies & Tools > Patterns & How To > Patterns
+
+PRICE SUGGESTION: $9.99   (comparable listings: $7–$12)
+
+DIGITAL FILE TYPES: CSV (x6), HTML (x1), TXT (x2)
+
+--------------------------------------------------------------
+DESCRIPTION
+--------------------------------------------------------------
+
+🏠 Track every dollar. Stop scope creep before it starts.
+
+This ready-to-use Home Renovation Budget Tracker gives you a complete
+system for managing your renovation budget from first bid to final payment —
+in Google Sheets or Microsoft Excel.
+
+Stop losing track of change orders. Stop getting surprised by overages.
+Stop wondering where your renovation budget went.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ WHAT'S INCLUDED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 6-Tab Spreadsheet (CSV Pack for Google Sheets / Excel):
+
+• Dashboard — One-screen summary: total budget, total spent, approved
+  change orders, revised total, overall % complete, and 15% contingency
+  tracker. Status auto-updates for every room.
+
+• Scope & Budget by Room — Original bids for 11 rooms/trades (Kitchen,
+  Primary Bath, Guest Bath, Living Room, Master Bedroom, Flooring,
+  Exterior, Electrical, Plumbing, HVAC, Other). Revised totals and
+  Amount Paid pull automatically from other tabs.
+
+• Change Order Log — Log every change order with date, room, description,
+  reason, cost impact, and approval status. Running Total auto-calculates.
+  RED WARNING fires automatically if change orders exceed 10% of your
+  original budget.
+
+• Payment Schedule — Track every milestone payment by contractor, room,
+  and scheduled date. Outstanding Balance auto-calculates. Overdue
+  payments highlight automatically.
+
+• Materials Tracker — Log every material order: item, supplier, budgeted
+  vs. actual cost, order date, lead time, delivery date, and status.
+  Variance column flags overages in red instantly.
+
+• Instructions — Plain-English setup guide with step-by-step instructions,
+  scope creep prevention tips, color coding guide, and troubleshooting.
+
+🖨 Printable Workbook (HTML → Save as PDF in any browser):
+
+• Professional printable workbook — open in Chrome, click Print
+• Project overview, room budget sheets, change order log forms,
+  payment schedule, materials tracker, and scope creep reference card
+• No special software needed
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 FILES IN THIS DOWNLOAD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• 01_Dashboard.csv
+• 02_Scope_Budget_by_Room.csv
+• 03_Change_Order_Log.csv
+• 04_Payment_Schedule.csv
+• 05_Materials_Tracker.csv
+• 06_Instructions.csv
+• 00_README_Import_Instructions.txt
+• Home-Renovation-Budget-Tracker-Printable.html
+• README.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🖥 HOW TO USE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Google Sheets (free):
+1. sheets.google.com → Blank spreadsheet
+2. File → Import → Upload each CSV → Insert new sheet, Comma, Yes
+3. Paste formulas from the FORMULA REFERENCE sections
+
+Microsoft Excel:
+1. File → Open each CSV file
+2. Move all tabs into one workbook
+3. Paste formulas from the FORMULA REFERENCE sections
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏠 PERFECT FOR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+• Full home renovations and remodels
+• Kitchen and bathroom upgrades
+• Multi-room renovation projects
+• Any homeowner managing multiple contractors and trades
+• First-time renovators who want to stay in control of their budget
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+❓ FAQ
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q: Does this work with Microsoft Excel?
+A: Yes. Open each CSV with File → Open. Formulas are included as
+   paste-ready text in each tab's FORMULA REFERENCE section.
+
+Q: What if I have more rooms than the 11 pre-loaded?
+A: Add rows in the Scope & Budget tab, then copy the formula from the
+   row above into the new row. Update the Dashboard room list to match.
+
+Q: Does it work for smaller projects (just one room)?
+A: Yes — just use the rows you need and leave the rest blank.
+
+Q: How do I add more change orders than the pre-loaded rows?
+A: Insert a new row, right-click the row above, Copy, then right-click
+   the new row, Paste. The formulas will copy automatically.
+
+Q: Is the contingency percentage customizable?
+A: Yes — the formula reference section shows the contingency formula.
+   Change 0.15 to any percentage you prefer (e.g., 0.10 for 10%).
+
+Q: Is this a physical item?
+A: No — instant digital download delivered immediately after purchase.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MOCKUP PHOTOS TO SHOOT (seller note)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. MacBook showing Dashboard with filled-in budget and green/yellow status rows
+2. iPad showing Change Order Log with the red 10% warning triggered
+3. Printed workbook on a contractor's clipboard next to blueprints
+4. Close-up of the Payment Schedule with one row highlighted red (overdue)
+5. iPhone showing the spreadsheet on Google Sheets mobile app
+6. Side-by-side: laptop spreadsheet + printed budget sheet on a desk
+7. Before/after: blank template vs. filled-in example with real numbers
+
+--------------------------------------------------------------
+TAGS (13)
+--------------------------------------------------------------
+
+renovation budget
+home renovation
+budget tracker
+google sheets
+renovation planner
+homeowner tool
+budget template
+home improvement
+digital download
+spreadsheet template
+project budget
+change order log
+scope creep tracker
+
+--------------------------------------------------------------
+END OF LISTING
+--------------------------------------------------------------

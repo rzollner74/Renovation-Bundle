@@ -1,0 +1,43 @@
+HOME RENOVATION BUDGET TRACKER — DASHBOARD,,,
+"Tab 1 of 6 | Enter your Total Budget in the yellow cell below — all other cells calculate automatically",,,
+,,,
+🏠 Home Renovation Budget Tracker,,,
+"Track every dollar. Stop scope creep before it starts.",,,
+,,,
+BUDGET SUMMARY,,,
+Total Original Budget (ENTER HERE →),$0.00,,
+,,,
+Total Spent to Date,$0.00,,
+Total Approved Change Orders,$0.00,,
+Revised Total Budget,$0.00,,
+Overall % Complete,0.0%,,
+,,,
+CONTINGENCY TRACKING,,,
+Contingency Budget (15% of original),$0.00,,
+Contingency Remaining,$0.00,,
+,,,
+ROOM STATUS SUMMARY,,,,,,,,
+Room/Area,Original Budget,Approved Change Orders,Revised Total,Amount Paid,Remaining,Status,ID
+Kitchen,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,1
+Primary Bathroom,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,2
+Guest Bathroom,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,3
+Living Room,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,4
+Master Bedroom,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,5
+Flooring,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,6
+Exterior,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,7
+Electrical,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,8
+Plumbing,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,9
+HVAC,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,10
+Other,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started,11
+TOTAL,$0.00,$0.00,$0.00,$0.00,$0.00,,
+,,,
+FORMULA REFERENCE — Paste into the matching cells after importing,,,
+"NOTE: Assumes tab names match exactly. The yellow Budget cell is B8 in this layout.",,,
+,,,
+Formula,Description,Paste into cell,
+"=SUM('Payment Schedule'!G2:G51)","Total amount paid across all payment rows","Dashboard › Total Spent to Date value cell",
+"=SUMIF('Change Order Log'!G2:G51,""Y"",'Change Order Log'!F2:F51)","Sum of all approved change orders","Dashboard › Total Approved Change Orders value cell",
+"=B8+B10","Revised Total = Original Budget + Approved COs","Dashboard › Revised Total Budget value cell",
+"=IF(B11=0,0,TEXT(B9/B11,""0.0%""))","Overall % complete = Spent / Revised Total","Dashboard › Overall % Complete value cell",
+"=B8*0.15","15% contingency budget","Dashboard › Contingency Budget value cell",
+"=B14-B10","Contingency Remaining = Contingency - Approved COs","Dashboard › Contingency Remaining value cell",

@@ -1,0 +1,48 @@
+HOME RENOVATION BUDGET TRACKER — SCOPE & BUDGET BY ROOM,,,,,,,,
+"Tab 2 of 6 | Enter Original Bid in column C (yellow) | All other columns calculate automatically",,,,,,,,
+"CRITICAL: Room/Area names must match EXACTLY across all tabs (capitalization matters)",,,,,,,,
+,,,,,,,,
+Room/Area,Trade / Category,Original Bid ($),Approved Change Orders ($),Revised Total ($),Amount Paid ($),Remaining ($),Status
+Kitchen,Kitchen Remodel,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Primary Bathroom,Bathroom Remodel,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Guest Bathroom,Bathroom Remodel,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Living Room,Renovation,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Master Bedroom,Renovation,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Flooring,Flooring,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Exterior,Exterior / Landscaping,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Electrical,Electrical,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Plumbing,Plumbing,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+HVAC,HVAC,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+Other,Miscellaneous,$0.00,$0.00,$0.00,$0.00,$0.00,Not Started
+TOTAL,,$0.00,$0.00,$0.00,$0.00,$0.00,
+,,,,,,,,
+COLUMN GUIDE,,,,,,,,
+Column,Description,How it works,,,,,,
+A — Room/Area,Room or trade name,"Must match exactly across all tabs — copy/paste to avoid typos",,,,,,
+B — Trade/Category,Type of work being done,"Kitchen Remodel, Bathroom Remodel, Electrical, etc.",,,,,,
+C — Original Bid ($),Contractor's original quoted price,"YOU enter this — the only input column",,,,,,
+D — Approved Change Orders ($),Sum of approved COs for this room,Auto-pulls from Change Order Log tab,,,,,,
+E — Revised Total ($),Updated budget including approved COs,Auto-calculated: Original Bid + Approved COs,,,,,,
+F — Amount Paid ($),Total payments made for this room,Auto-pulls from Payment Schedule tab,,,,,,
+G — Remaining ($),Budget remaining for this room,Auto-calculated: Revised Total − Amount Paid,,,,,,
+H — Status,Budget health indicator,"Auto: On Budget / Watch / Over Budget / Not Started",,,,,,
+,,,,,,,,
+STATUS LOGIC,,,,,,,,
+Not Started,No original bid entered yet,,,,,,,
+On Budget,Amount Paid is below 90% of Revised Total,,,,,,,
+Watch,Amount Paid is between 90–100% of Revised Total,,,,,,,
+Over Budget,Amount Paid has exceeded the Revised Total,,,,,,,
+,,,,,,,,
+FORMULA REFERENCE — Paste into the matching column cells (rows 2–12) then copy down,,,,,,,,
+,,,,,,,,
+Formula,Description,Paste into column,,,,,
+"=C2+D2","Revised Total = Original Bid + Approved Change Orders","Column E (Revised Total) — paste in E2 copy to E3:E12",,,,,
+"=SUMIF('Change Order Log'!B:B,A2,'Change Order Log'!F:F)","Pulls approved COs for this room from Change Order Log","Column D — paste in D2 copy to D3:D12 (adjust if needed)",,,,,
+"=SUMIF('Payment Schedule'!B:B,A2,'Payment Schedule'!G:G)","Pulls total payments for this room from Payment Schedule","Column F — paste in F2 copy to F3:F12",,,,,
+"=IF(E2=0,"""",E2-F2)","Remaining = Revised Total − Amount Paid","Column G (Remaining) — paste in G2 copy to G3:G12",,,,,
+"=IF(C2=0,""Not Started"",IF(F2>E2,""Over Budget"",IF(F2>=E2*0.9,""Watch"",""On Budget"")))","Auto status based on spending vs. revised total","Column H (Status) — paste in H2 copy to H3:H12",,,,,
+"=SUM(C2:C12)","Total of all original bids","TOTAL row › Column C",,,,,
+"=SUM(D2:D12)","Total approved change orders","TOTAL row › Column D",,,,,
+"=SUM(E2:E12)","Total revised budget","TOTAL row › Column E",,,,,
+"=SUM(F2:F12)","Total amount paid","TOTAL row › Column F",,,,,
+"=SUM(G2:G12)","Total remaining","TOTAL row › Column G",,,,,
