@@ -265,6 +265,14 @@ async function getCalendarEvents() {
   return getCalendarFromMac();
 }
 
+// Convert "18:30" (24h) to "6:30 PM" (12h).
+function to12Hour(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const period = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${period}`;
+}
+
 // Read today's events from the Mac Calendar app via icalBuddy (uses EventKit,
 // so it sees every account already configured in Calendar.app).
 // Install once: brew install ical-buddy
@@ -272,8 +280,7 @@ async function getCalendarFromMac() {
   const bin = process.env.ICALBUDDY_BIN || 'icalBuddy';
   try {
     // -nc no calendar names, -b "" no bullet, -sd sort by date,
-    // -nrd absolute (not "today at"), -tf 24h time. One event's title is a
-    // non-indented line; its time appears on the following indented line(s).
+    // -nrd absolute (not "today at"), -tf 24h time (converted to 12h below).
     const { stdout } = await execAsync(
       `${bin} -nc -sd -nrd -b "" -tf "%H:%M" eventsToday`,
       { timeout: 10000 }
@@ -290,7 +297,7 @@ async function getCalendarFromMac() {
           if (/all[- ]?day/i.test(t)) current.start = 'All day';
           else {
             const m = t.match(/\b(\d{1,2}:\d{2})\b/);
-            if (m) current.start = m[1];
+            if (m) current.start = to12Hour(m[1]);
           }
         }
       } else {
