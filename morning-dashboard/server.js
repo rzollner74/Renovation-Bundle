@@ -301,10 +301,11 @@ async function getCalendarEvents() {
   }
 }
 
-// Get Gmail unread count via IMAP (imapflow).
-// One connection to your aggregate inbox shows everything that lands there —
-// no need to configure each forwarding account separately.
+// Get Gmail unread counts via IMAP (imapflow), with a per-label breakdown.
+// One connection to your aggregate inbox shows everything that lands there.
 // Requires IMAP_USER + IMAP_PASSWORD (a Gmail App Password) in .env.
+// Optional: GMAIL_LABELS="Bio-One,Card My Yard,Personal" pins specific labels;
+// otherwise it auto-discovers labels that currently have unread mail.
 async function getEmailStatus() {
   const user = process.env.IMAP_USER;
   const pass = process.env.IMAP_PASSWORD;
@@ -314,9 +315,15 @@ async function getEmailStatus() {
     return {
       status: 'not_configured',
       unread: 0,
+      labels: [],
       message: 'Add IMAP_USER and IMAP_PASSWORD (Gmail App Password) to your .env file.',
     };
   }
+
+  const wanted = (process.env.GMAIL_LABELS || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
 
   const client = new ImapFlow({
     host,
@@ -328,18 +335,45 @@ async function getEmailStatus() {
 
   try {
     await client.connect();
-    // status() reads counts without opening/locking the mailbox
-    const status = await client.status('INBOX', { unseen: true, messages: true });
+
+    // Total unread in the inbox
+    const inbox = await client.status('INBOX', { unseen: true });
+    const totalUnread = inbox.unseen || 0;
+
+    let labels = [];
+    if (wanted.length) {
+      // Pinned labels from .env — report each (flag any that don't exist)
+      for (const name of wanted) {
+        try {
+          const st = await client.status(name, { unseen: true });
+          labels.push({ name, unread: st.unseen || 0 });
+        } catch {
+          labels.push({ name, unread: 0, missing: true });
+        }
+      }
+    } else {
+      // Auto-discover: user labels that currently have unread mail
+      const boxes = await client.list();
+      for (const box of boxes) {
+        const p = box.path;
+        if (p === 'INBOX') continue;                 // shown as the total
+        if (p.startsWith('[Gmail]')) continue;        // system folders
+        if (box.flags && box.flags.has('\\Noselect')) continue;
+        try {
+          const st = await client.status(p, { unseen: true });
+          if ((st.unseen || 0) > 0) labels.push({ name: p, unread: st.unseen });
+        } catch { /* skip unreadable folders */ }
+      }
+      labels.sort((a, b) => b.unread - a.unread);
+      labels = labels.slice(0, 8);
+    }
+
     await client.logout();
-    return {
-      status: 'connected',
-      unread: status.unseen || 0,
-      total: status.messages || 0,
-    };
+    return { status: 'connected', unread: totalUnread, labels };
   } catch (error) {
     console.error('Gmail/IMAP error:', error.message);
     try { await client.logout(); } catch { /* already closed */ }
-    return { status: 'error', unread: 0, message: error.message.slice(0, 160) };
+    return { status: 'error', unread: 0, labels: [], message: error.message.slice(0, 160) };
   }
 }
 

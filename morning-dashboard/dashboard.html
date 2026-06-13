@@ -622,12 +622,23 @@
             : data.email.status === 'not_configured' ? 'Not configured'
             : data.email.status === 'error' ? 'Error'
             : 'Connecting...';
+          const labels = data.email.labels || [];
           gmail.innerHTML = `
             <h2>📧 Gmail</h2>
             <div class="metric">
-              <div class="label">Unread</div>
+              <div class="label">Total Unread</div>
               <div class="value bio-one-accent">${isConnected ? (data.email.unread || 0) : '—'}</div>
             </div>
+            ${isConnected && labels.length > 0 ? `
+              <div class="frequency-breakdown">
+                ${labels.map(l => `
+                  <div class="frequency-row">
+                    <span class="frequency-label">${l.missing ? '⚠️ ' : ''}${l.name}</span>
+                    <span class="frequency-count">${l.unread}</span>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
             <div class="metric">
               <div class="label">Status</div>
               <div class="value small"><span class="status-indicator ${isConnected ? 'status-active' : 'status-pending'}"></span>${statusLabel}</div>
