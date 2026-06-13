@@ -37,6 +37,19 @@ app.use((req, res, next) => {
 // HELPERS
 // ============================================================================
 
+// Resolve to `fallback` if `promise` doesn't settle within `ms`, so a single
+// slow/stuck source can never freeze the whole /api/dashboard response.
+function withTimeout(promise, ms, fallback) {
+  let timer;
+  const guard = new Promise((resolve) => {
+    timer = setTimeout(() => resolve(fallback), ms);
+  });
+  return Promise.race([
+    Promise.resolve(promise).then((v) => { clearTimeout(timer); return v; }),
+    guard,
+  ]);
+}
+
 // Get Apple Reminders for a given list using osascript (macOS only)
 async function getAppleReminders(listName) {
   try {
@@ -331,6 +344,10 @@ async function getEmailStatus() {
     secure: true,
     auth: { user, pass },
     logger: false,
+    // Bound every IMAP step so the connection can't hang indefinitely
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000,
   });
 
   try {
@@ -352,16 +369,22 @@ async function getEmailStatus() {
         }
       }
     } else {
-      // Auto-discover: user labels that currently have unread mail
-      const boxes = await client.list();
+      // Auto-discover: user labels that currently have unread mail.
+      // Cap the number of folders scanned so accounts with many labels
+      // can't make this step crawl (one round-trip per folder).
+      const boxes = (await client.list())
+        .filter(box => {
+          const p = box.path;
+          if (p === 'INBOX') return false;            // shown as the total
+          if (p.startsWith('[Gmail]')) return false;  // system folders
+          if (box.flags && box.flags.has('\\Noselect')) return false;
+          return true;
+        })
+        .slice(0, 40);
       for (const box of boxes) {
-        const p = box.path;
-        if (p === 'INBOX') continue;                 // shown as the total
-        if (p.startsWith('[Gmail]')) continue;        // system folders
-        if (box.flags && box.flags.has('\\Noselect')) continue;
         try {
-          const st = await client.status(p, { unseen: true });
-          if ((st.unseen || 0) > 0) labels.push({ name: p, unread: st.unseen });
+          const st = await client.status(box.path, { unseen: true });
+          if ((st.unseen || 0) > 0) labels.push({ name: box.path, unread: st.unseen });
         } catch { /* skip unreadable folders */ }
       }
       labels.sort((a, b) => b.unread - a.unread);
@@ -383,20 +406,21 @@ async function getEmailStatus() {
 
 app.get('/api/dashboard', async (req, res) => {
   try {
+    // Each source is time-boxed so one slow/stuck service can't freeze the page.
     const [weather, quote, cronStatus, cmyStatus, apollo, calendar, email, reminders] =
       await Promise.all([
-        getWeather(),
-        getQuote(),
-        getCronStatus(),
-        getCMYWatcherStatus(),
-        getApolloMetrics(),
-        getCalendarEvents(),
-        getEmailStatus(),
-        Promise.all([
+        withTimeout(getWeather(), 8000, { error: 'Weather timed out' }),
+        withTimeout(getQuote(), 8000, { text: 'Every morning brings new possibilities.', author: 'Anon' }),
+        withTimeout(getCronStatus(), 5000, { jobs: [], status: 'error' }),
+        withTimeout(getCMYWatcherStatus(), 5000, { error: 'CMY watcher timed out' }),
+        withTimeout(getApolloMetrics(), 12000, { status: 'error', message: 'Apollo timed out' }),
+        withTimeout(getCalendarEvents(), 12000, { status: 'error', events: [], message: 'Calendar timed out' }),
+        withTimeout(getEmailStatus(), 15000, { status: 'error', unread: 0, labels: [], message: 'Gmail timed out' }),
+        withTimeout(Promise.all([
           getAppleReminders('Bio-One'),
           getAppleReminders('Card My Yard'),
           getAppleReminders('Ryan\'s Personal'),
-        ]),
+        ]), 8000, [[], [], []]),
       ]);
 
     res.json({
