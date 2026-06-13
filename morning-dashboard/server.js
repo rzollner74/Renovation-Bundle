@@ -256,7 +256,9 @@ async function getCalendarEvents() {
   }
 
   try {
-    const { stdout } = await execAsync(`python "${scriptPath}" calendar list`);
+    // macOS ships python3 (the bare "python" was removed). Allow an override.
+    const pythonBin = process.env.PYTHON_BIN || 'python3';
+    const { stdout } = await execAsync(`${pythonBin} "${scriptPath}" calendar list`);
     const events = JSON.parse(stdout || '[]');
     return { status: 'connected', events: events.slice(0, 5) }; // next 5 events
   } catch (error) {
