@@ -253,22 +253,70 @@ async function getApolloMetrics() {
   }
 }
 
-// Get today's calendar events from one or more secret iCal (.ics) feed URLs.
-// CALENDAR_ICS_URL may hold a single URL or several separated by commas, so you
-// can combine multiple calendars (work, personal, family, etc.).
-// Returns { status, events, message }.
+// Today's calendar events.
+// Default: read the Mac Calendar app (all accounts at once) via icalBuddy.
+// Fallback: if CALENDAR_ICS_URL is set, read those secret iCal feeds instead.
 async function getCalendarEvents() {
   const raw = process.env.CALENDAR_ICS_URL || '';
   const urls = raw.split(',').map(s => s.trim()).filter(Boolean);
-
-  if (urls.length === 0) {
-    return {
-      status: 'not_configured',
-      events: [],
-      message: 'Add CALENDAR_ICS_URL (secret iCal address) to your .env file.',
-    };
+  if (urls.length > 0) {
+    return getCalendarFromICS(urls);
   }
+  return getCalendarFromMac();
+}
 
+// Read today's events from the Mac Calendar app via icalBuddy (uses EventKit,
+// so it sees every account already configured in Calendar.app).
+// Install once: brew install ical-buddy
+async function getCalendarFromMac() {
+  const bin = process.env.ICALBUDDY_BIN || 'icalBuddy';
+  try {
+    // -nc no calendar names, -b "" no bullet, -sd sort by date,
+    // -nrd absolute (not "today at"), -tf 24h time. One event's title is a
+    // non-indented line; its time appears on the following indented line(s).
+    const { stdout } = await execAsync(
+      `${bin} -nc -sd -nrd -b "" -tf "%H:%M" eventsToday`,
+      { timeout: 10000 }
+    );
+
+    const events = [];
+    let current = null;
+    for (const line of stdout.split('\n')) {
+      if (!line.trim()) continue;
+      if (/^\s/.test(line)) {
+        // indented property line (datetime / location) for the current event
+        if (current && !current.start) {
+          const t = line.trim();
+          if (/all[- ]?day/i.test(t)) current.start = 'All day';
+          else {
+            const m = t.match(/\b(\d{1,2}:\d{2})\b/);
+            if (m) current.start = m[1];
+          }
+        }
+      } else {
+        current = { summary: line.trim(), start: '' };
+        events.push(current);
+      }
+    }
+
+    const cleaned = events.map(e => ({ summary: e.summary, start: e.start || 'All day' }));
+    return { status: 'connected', events: cleaned.slice(0, 12) };
+  } catch (error) {
+    const msg = error.message || '';
+    if (/not found|No such file|ENOENT/i.test(msg)) {
+      return {
+        status: 'not_configured',
+        events: [],
+        message: 'icalBuddy not installed. Run: brew install ical-buddy',
+      };
+    }
+    console.error('Calendar error:', msg);
+    return { status: 'error', events: [], message: msg.slice(0, 160) };
+  }
+}
+
+// Read today's events from one or more secret iCal (.ics) feed URLs.
+async function getCalendarFromICS(urls) {
   const now = new Date();
   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
