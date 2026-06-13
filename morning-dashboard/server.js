@@ -253,13 +253,15 @@ async function getApolloMetrics() {
   }
 }
 
-// Get today's Google Calendar events from a secret iCal (.ics) feed URL.
-// Set CALENDAR_ICS_URL in .env (Google Calendar > Settings > your calendar >
-// Integrate calendar > "Secret address in iCal format").
-// Returns { status, events, message } so the dashboard can explain failures.
+// Get today's calendar events from one or more secret iCal (.ics) feed URLs.
+// CALENDAR_ICS_URL may hold a single URL or several separated by commas, so you
+// can combine multiple calendars (work, personal, family, etc.).
+// Returns { status, events, message }.
 async function getCalendarEvents() {
-  const url = process.env.CALENDAR_ICS_URL;
-  if (!url) {
+  const raw = process.env.CALENDAR_ICS_URL || '';
+  const urls = raw.split(',').map(s => s.trim()).filter(Boolean);
+
+  if (urls.length === 0) {
     return {
       status: 'not_configured',
       events: [],
@@ -267,34 +269,30 @@ async function getCalendarEvents() {
     };
   }
 
-  try {
-    const data = await ical.async.fromURL(url);
+  const now = new Date();
+  const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
 
-    const now = new Date();
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  const todays = [];
+  const addEvent = (ev, startDate) => {
+    const allDay = ev.datetype === 'date';
+    todays.push({
+      summary: ev.summary || '(no title)',
+      start: allDay
+        ? 'All day'
+        : startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+      _sort: startDate.getTime(),
+    });
+  };
 
-    const todays = [];
-    const addEvent = (ev, startDate) => {
-      const allDay = ev.datetype === 'date';
-      todays.push({
-        summary: ev.summary || '(no title)',
-        start: allDay
-          ? 'All day'
-          : startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-        _sort: startDate.getTime(),
-      });
-    };
-
+  const collectFromFeed = (data) => {
     for (const key of Object.keys(data)) {
       const ev = data[key];
       if (!ev || ev.type !== 'VEVENT') continue;
 
       if (ev.rrule) {
-        // Recurring event: expand occurrences that fall within today
         const occurrences = ev.rrule.between(dayStart, dayEnd, true);
         for (const occ of occurrences) {
-          // Honor cancelled instances (EXDATE)
           const exKey = occ.toISOString().slice(0, 10);
           if (ev.exdate && ev.exdate[exKey]) continue;
           addEvent(ev, occ);
@@ -304,14 +302,27 @@ async function getCalendarEvents() {
         if (s >= dayStart && s <= dayEnd) addEvent(ev, s);
       }
     }
+  };
 
-    todays.sort((a, b) => a._sort - b._sort);
-    const events = todays.slice(0, 8).map(({ summary, start }) => ({ summary, start }));
-    return { status: 'connected', events };
-  } catch (error) {
-    console.error('Calendar error:', error.message);
-    return { status: 'error', events: [], message: error.message.slice(0, 160) };
+  const errors = [];
+  for (const url of urls) {
+    try {
+      const data = await ical.async.fromURL(url);
+      collectFromFeed(data);
+    } catch (error) {
+      console.error('Calendar error:', error.message);
+      errors.push(error.message.slice(0, 80));
+    }
   }
+
+  // All feeds failed to load
+  if (errors.length === urls.length) {
+    return { status: 'error', events: [], message: errors[0] || 'Failed to load calendar.' };
+  }
+
+  todays.sort((a, b) => a._sort - b._sort);
+  const events = todays.slice(0, 12).map(({ summary, start }) => ({ summary, start }));
+  return { status: 'connected', events };
 }
 
 // Get Gmail unread counts via IMAP (imapflow), with a per-label breakdown.
