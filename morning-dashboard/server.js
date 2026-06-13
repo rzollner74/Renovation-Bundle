@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { ImapFlow } from 'imapflow';
 import ical from 'node-ical';
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
 import path from 'path';
@@ -15,6 +15,7 @@ const __dirname = path.dirname(__filename);
 
 dotenv.config();
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -53,10 +54,8 @@ function withTimeout(promise, ms, fallback) {
 // Get Apple Reminders for a given list using osascript (macOS only)
 async function getAppleReminders(listName) {
   try {
-    // Use osascript with -e flag to get all reminders
-    const escapedList = listName.replace(/"/g, '\\"');
     const script = `tell application "Reminders"
-  set remindersList to reminders in list "${escapedList}" whose completed is false
+  set remindersList to reminders in list "${listName}" whose completed is false
   set output to ""
   repeat with aReminder in remindersList
     set output to output & (name of aReminder) & linefeed
@@ -64,7 +63,7 @@ async function getAppleReminders(listName) {
   return output
 end tell`;
 
-    const { stdout } = await execAsync(`osascript -e '${script.replace(/'/g, "'\\''")}'`);
+    const { stdout } = await execFileAsync('osascript', ['-e', script]);
 
     // Parse osascript output (each reminder on a new line)
     const reminderTitles = stdout
