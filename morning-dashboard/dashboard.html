@@ -128,6 +128,14 @@
     .weather .condition { font-size: 1.15rem; color: rgba(255,255,255,0.92); margin-bottom: 16px; }
     .weather .details { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
     .weather .details p { font-size: 0.85rem; color: rgba(255,255,255,0.88); }
+    .sky-strip {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px;
+      margin-top: 16px; padding: 14px 16px;
+      background: rgba(255,255,255,0.16); border-radius: 12px;
+    }
+    .sky-strip .sky-item { text-align: center; }
+    .sky-strip .sky-cap { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.8); }
+    .sky-strip .sky-val { font-size: 1.05rem; font-weight: 700; color: #fff; margin-top: 2px; }
     .radar { margin-top: 18px; }
     .radar-frame {
       width: 100%; height: 200px; border: 0; border-radius: 12px; display: block;
@@ -281,6 +289,13 @@
                 <p>Humidity ${data.weather.humidity}%</p>
                 <p>Wind ${Math.round(data.weather.windSpeed)} mph</p>
               </div>
+              ${(data.weather.high != null || data.weather.sunrise) ? `
+              <div class="sky-strip">
+                ${data.weather.high != null ? `<div class="sky-item"><div class="sky-cap">High / Low</div><div class="sky-val">${data.weather.high}° / ${data.weather.low}°</div></div>` : ''}
+                ${data.weather.sunrise ? `<div class="sky-item"><div class="sky-cap">🌅 Sunrise</div><div class="sky-val">${data.weather.sunrise}</div></div>` : ''}
+                ${data.weather.sunset ? `<div class="sky-item"><div class="sky-cap">🌇 Sunset</div><div class="sky-val">${data.weather.sunset}</div></div>` : ''}
+                ${data.weather.rainChance != null ? `<div class="sky-item"><div class="sky-cap">☔ Rain</div><div class="sky-val">${data.weather.rainChance}%</div></div>` : ''}
+              </div>` : ''}
               <div class="radar">
                 <iframe class="radar-frame" title="Local doppler radar" loading="lazy"
                   src="https://www.rainviewer.com/map.html?loc=40.8351,-74.1745,8&oFa=0&oC=0&oU=0&oCS=1&oF=0&c=3&o=83&lm=1&layer=radar&sm=1&sn=1&hu=false"></iframe>
@@ -380,6 +395,27 @@
           grid.appendChild(g);
         }
 
+        // Cron Jobs (sits to the right of Gmail)
+        if (data.cronStatus) {
+          const c = document.createElement('section');
+          c.className = 'card';
+          c.innerHTML = `
+            <h2>⚙️ Cron Jobs</h2>
+            ${data.cronStatus.jobs && data.cronStatus.jobs.length > 0
+              ? data.cronStatus.jobs.map(job => `
+                  <div class="job">
+                    <div class="job-name">${job.name}</div>
+                    <div class="job-schedule">${readableCronExpression(job.schedule && job.schedule.expr ? job.schedule.expr : job.schedule)}</div>
+                    <div class="job-status">
+                      <span class="status-indicator ${job.status === 'active' ? 'status-active' : 'status-pending'}"></span>
+                      ${job.status === 'active' ? '✅ Active' : '⏳ ' + job.status}
+                    </div>
+                  </div>`).join('')
+              : '<div style="color: var(--muted); padding: 8px 0;">No active jobs</div>'}
+          `;
+          grid.appendChild(c);
+        }
+
         // Apollo (progress bars, full width)
         if (data.apollo) {
           const a = data.apollo;
@@ -412,27 +448,6 @@
             `;
           }
           grid.appendChild(card);
-        }
-
-        // Cron Jobs
-        if (data.cronStatus) {
-          const c = document.createElement('section');
-          c.className = 'card';
-          c.innerHTML = `
-            <h2>⚙️ Cron Jobs</h2>
-            ${data.cronStatus.jobs && data.cronStatus.jobs.length > 0
-              ? data.cronStatus.jobs.map(job => `
-                  <div class="job">
-                    <div class="job-name">${job.name}</div>
-                    <div class="job-schedule">${readableCronExpression(job.schedule && job.schedule.expr ? job.schedule.expr : job.schedule)}</div>
-                    <div class="job-status">
-                      <span class="status-indicator ${job.status === 'active' ? 'status-active' : 'status-pending'}"></span>
-                      ${job.status === 'active' ? '✅ Active' : '⏳ ' + job.status}
-                    </div>
-                  </div>`).join('')
-              : '<div style="color: var(--muted); padding: 8px 0;">No active jobs</div>'}
-          `;
-          grid.appendChild(c);
         }
 
       } catch (error) {

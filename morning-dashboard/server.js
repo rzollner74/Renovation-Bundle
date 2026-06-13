@@ -83,10 +83,11 @@ end tell`;
 async function getWeather() {
   try {
     const res = await fetch(
-      'https://api.open-meteo.com/v1/forecast?latitude=40.8351&longitude=-74.1745&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,apparent_temperature'
+      'https://api.open-meteo.com/v1/forecast?latitude=40.8351&longitude=-74.1745&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m,apparent_temperature&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=auto'
     );
     const data = await res.json();
     const current = data.current;
+    const daily = data.daily || {};
 
     // Map WMO weather codes to conditions
     const conditions = {
@@ -101,13 +102,24 @@ async function getWeather() {
       95: 'Thunderstorm', 96: 'Thunderstorm + Hail', 99: 'Thunderstorm + Hail'
     };
 
+    const cToF = (c) => Math.round(c * 9 / 5 + 32);
+    const fmtTime = (iso) => iso
+      ? new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+      : null;
+    const first = (arr) => Array.isArray(arr) && arr.length ? arr[0] : undefined;
+
     return {
-      temp: Math.round(current.temperature_2m * 9 / 5 + 32), // Convert C to F
+      temp: cToF(current.temperature_2m), // Convert C to F
       condition: conditions[current.weather_code] || 'Unknown',
       description: conditions[current.weather_code] || 'Unknown',
       humidity: current.relative_humidity_2m,
       windSpeed: Math.round(current.wind_speed_10m * 0.621371), // Convert km/h to mph
-      feelsLike: Math.round(current.apparent_temperature * 9 / 5 + 32),
+      feelsLike: cToF(current.apparent_temperature),
+      high: first(daily.temperature_2m_max) !== undefined ? cToF(first(daily.temperature_2m_max)) : null,
+      low: first(daily.temperature_2m_min) !== undefined ? cToF(first(daily.temperature_2m_min)) : null,
+      sunrise: fmtTime(first(daily.sunrise)),
+      sunset: fmtTime(first(daily.sunset)),
+      rainChance: first(daily.precipitation_probability_max) ?? null,
     };
   } catch (error) {
     console.error('Weather fetch error:', error.message);
