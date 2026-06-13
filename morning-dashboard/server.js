@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import { ImapFlow } from 'imapflow';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -175,17 +176,62 @@ async function getCMYWatcherStatus() {
   }
 }
 
-// Apollo metrics via MCP (will auto-connect when Hermes is ready)
+// Apollo sequence metrics via the Apollo REST API.
+// Requires APOLLO_API_KEY in .env (Apollo > Settings > Integrations > API).
 async function getApolloMetrics() {
-  try {
-    // MCP will auto-discover and connect from config.
-    // Status string is kept in sync with the dashboard's check
-    // (see dashboard.html: data.apollo.status === 'connected').
+  const apiKey = process.env.APOLLO_API_KEY;
+  if (!apiKey) {
     return {
-      status: 'connecting',
-      message: '⏳ Apollo MCP Connecting...',
-      note: 'Hermes is discovering Apollo MCP server',
-      setup: 'Sequences will auto-load once connected',
+      status: 'not_configured',
+      message: 'Add APOLLO_API_KEY to your .env file to load sequences.',
+    };
+  }
+
+  try {
+    const res = await fetch('https://api.apollo.io/v1/emailer_campaigns/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'X-Api-Key': apiKey,
+      },
+      body: JSON.stringify({ page: 1, per_page: 100 }),
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      return { status: 'error', message: `Apollo API ${res.status}: ${text.slice(0, 120)}` };
+    }
+
+    const data = await res.json();
+    const campaigns = data.emailer_campaigns || [];
+    const active = campaigns.filter(c => c.active && !c.archived);
+
+    const sum = (key) => active.reduce((acc, c) => acc + (c[key] || 0), 0);
+
+    // Top 5 active sequences, most recently used first
+    const sequences = active
+      .slice()
+      .sort((a, b) => new Date(b.last_used_at || 0) - new Date(a.last_used_at || 0))
+      .slice(0, 5)
+      .map(c => ({
+        name: c.name,
+        steps: c.num_steps || 0,
+        delivered: c.unique_delivered || 0,
+        opened: c.unique_opened || 0,
+        replied: c.unique_replied || 0,
+        openRate: Math.round((c.open_rate || 0) * 100),
+        poorly: !!c.is_performing_poorly,
+      }));
+
+    return {
+      status: 'connected',
+      activeCount: active.length,
+      totalCount: data.pagination ? data.pagination.total_entries : campaigns.length,
+      totalDelivered: sum('unique_delivered'),
+      totalOpened: sum('unique_opened'),
+      totalReplied: sum('unique_replied'),
+      sequences,
     };
   } catch (error) {
     console.error('Apollo error:', error.message);
@@ -193,47 +239,71 @@ async function getApolloMetrics() {
   }
 }
 
-// Get Google Calendar events for today
+// Get Google Calendar events for today via the Hermes google-workspace skill.
+// Returns { status, events, message } so the dashboard can explain failures.
 async function getCalendarEvents() {
+  const scriptPath = path.join(
+    process.env.HOME || '/root',
+    '.hermes/skills/productivity/google-workspace/scripts/google_api.py'
+  );
+
+  if (!fs.existsSync(scriptPath)) {
+    return {
+      status: 'not_configured',
+      events: [],
+      message: 'Google Workspace script not found on this machine — calendar not set up.',
+    };
+  }
+
   try {
-    const GAPI = `python ${process.env.HOME}/.hermes/skills/productivity/google-workspace/scripts/google_api.py`;
-    const { stdout } = await execAsync(`${GAPI} calendar list`);
+    const { stdout } = await execAsync(`python "${scriptPath}" calendar list`);
     const events = JSON.parse(stdout || '[]');
-    return events.slice(0, 5); // Return next 5 events
+    return { status: 'connected', events: events.slice(0, 5) }; // next 5 events
   } catch (error) {
     console.error('Calendar error:', error.message);
-    return []; // Return empty on error
+    return { status: 'error', events: [], message: error.message.slice(0, 160) };
   }
 }
 
-// Get Gmail unread counts.
-// NOTE: live IMAP counts require an imap npm package (imap / imapflow).
-// Until that's wired up this returns a "connecting" placeholder whose shape
-// matches what dashboard.html reads (data.email.unread / data.email.status).
+// Get Gmail unread count via IMAP (imapflow).
+// One connection to your aggregate inbox shows everything that lands there —
+// no need to configure each forwarding account separately.
+// Requires IMAP_USER + IMAP_PASSWORD (a Gmail App Password) in .env.
 async function getEmailStatus() {
-  try {
+  const user = process.env.IMAP_USER;
+  const pass = process.env.IMAP_PASSWORD;
+  const host = process.env.IMAP_HOST || 'imap.gmail.com';
+
+  if (!user || !pass) {
     return {
+      status: 'not_configured',
       unread: 0,
-      important: 0,
-      status: 'connecting', // flip to 'connected' once IMAP is wired up
-      accounts: {
-        bioOne: { unread: 0, important: 0 },
-        cmy: { unread: 0, important: 0 },
-        personal: { unread: 0, important: 0 },
-      },
+      message: 'Add IMAP_USER and IMAP_PASSWORD (Gmail App Password) to your .env file.',
+    };
+  }
+
+  const client = new ImapFlow({
+    host,
+    port: 993,
+    secure: true,
+    auth: { user, pass },
+    logger: false,
+  });
+
+  try {
+    await client.connect();
+    // status() reads counts without opening/locking the mailbox
+    const status = await client.status('INBOX', { unseen: true, messages: true });
+    await client.logout();
+    return {
+      status: 'connected',
+      unread: status.unseen || 0,
+      total: status.messages || 0,
     };
   } catch (error) {
-    console.error('Gmail error:', error.message);
-    return {
-      unread: 0,
-      important: 0,
-      status: 'error',
-      accounts: {
-        bioOne: { unread: 0, important: 0 },
-        cmy: { unread: 0, important: 0 },
-        personal: { unread: 0, important: 0 },
-      },
-    };
+    console.error('Gmail/IMAP error:', error.message);
+    try { await client.logout(); } catch { /* already closed */ }
+    return { status: 'error', unread: 0, message: error.message.slice(0, 160) };
   }
 }
 

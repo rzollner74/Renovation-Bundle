@@ -572,19 +572,22 @@
         }
 
         // Calendar Card
-        if (data.calendar !== undefined) {
+        if (data.calendar) {
           const calendar = document.createElement('section');
           calendar.className = 'card bio-one-card';
+          const events = data.calendar.events || [];
+          const calMsg = data.calendar.message
+            || (data.calendar.status === 'connected' ? 'No events today' : '⏳ Connecting to Google Calendar...');
           calendar.innerHTML = `
             <h2>📅 Calendar</h2>
-            ${data.calendar && data.calendar.length > 0
-              ? data.calendar.map(event => `
+            ${events.length > 0
+              ? events.map(event => `
                   <div class="metric">
                     <div class="label">${event.summary || event.title}</div>
                     <div class="value small">${event.start || event.time}</div>
                   </div>
                 `).join('')
-              : '<div class="reminder-item" style="color: var(--text-tertiary);">⏳ Connecting to Google Calendar...</div>'}
+              : `<div class="reminder-item" style="color: var(--text-tertiary);">${calMsg}</div>`}
           `;
           grid.appendChild(calendar);
         }
@@ -594,16 +597,21 @@
           const gmail = document.createElement('section');
           gmail.className = 'card bio-one-card';
           const isConnected = data.email.status === 'connected';
+          const statusLabel = isConnected ? 'Connected'
+            : data.email.status === 'not_configured' ? 'Not configured'
+            : data.email.status === 'error' ? 'Error'
+            : 'Connecting...';
           gmail.innerHTML = `
             <h2>📧 Gmail</h2>
             <div class="metric">
               <div class="label">Unread</div>
-              <div class="value bio-one-accent">${isConnected ? (data.email.unread || 0) : '⏳'}</div>
+              <div class="value bio-one-accent">${isConnected ? (data.email.unread || 0) : '—'}</div>
             </div>
             <div class="metric">
               <div class="label">Status</div>
-              <div class="value small"><span class="status-indicator ${isConnected ? 'status-active' : 'status-pending'}"></span>${isConnected ? 'Connected' : 'Connecting...'}</div>
+              <div class="value small"><span class="status-indicator ${isConnected ? 'status-active' : 'status-pending'}"></span>${statusLabel}</div>
             </div>
+            ${data.email.message ? `<div style="color: var(--text-tertiary); font-size: 0.85rem; margin-top: 10px;">${data.email.message}</div>` : ''}
           `;
           grid.appendChild(gmail);
         }
@@ -637,11 +645,38 @@
           const apolloConnected = data.apollo.status === 'connected';
           apollo.innerHTML = `
             <h2>🚀 Apollo Sequences</h2>
-            <div class="metric">
-              <div class="label">Status</div>
-              <div class="value small">${apolloConnected ? '✅ Connected' : '⏳ Initializing...'}</div>
-            </div>
-            ${data.apollo.message ? `<div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">${data.apollo.message}</div>` : ''}
+            ${apolloConnected ? `
+              <div class="metric">
+                <div class="label">Active Sequences</div>
+                <div class="value bio-one-accent">${data.apollo.activeCount || 0}<span class="value small" style="color: var(--text-tertiary);"> / ${data.apollo.totalCount || 0}</span></div>
+              </div>
+              <div class="metric">
+                <div class="label">Delivered</div>
+                <div class="value small">${data.apollo.totalDelivered || 0}</div>
+              </div>
+              <div class="metric">
+                <div class="label">Opened</div>
+                <div class="value small">${data.apollo.totalOpened || 0}</div>
+              </div>
+              <div class="metric">
+                <div class="label">Replied</div>
+                <div class="value small">${data.apollo.totalReplied || 0}</div>
+              </div>
+              <div class="frequency-breakdown">
+                ${(data.apollo.sequences || []).map(s => `
+                  <div class="frequency-row">
+                    <span class="frequency-label">${s.poorly ? '⚠️ ' : ''}${s.name}</span>
+                    <span class="frequency-count">${s.openRate}% open</span>
+                  </div>
+                `).join('') || '<div style="color: var(--text-tertiary);">No active sequences</div>'}
+              </div>
+            ` : `
+              <div class="metric">
+                <div class="label">Status</div>
+                <div class="value small"><span class="status-indicator status-pending"></span>${data.apollo.status === 'not_configured' ? 'Not configured' : data.apollo.status === 'error' ? 'Error' : 'Initializing...'}</div>
+              </div>
+              ${data.apollo.message ? `<div style="color: var(--text-tertiary); font-size: 0.85rem; margin-top: 10px;">${data.apollo.message}</div>` : ''}
+            `}
           `;
           grid.appendChild(apollo);
         }
