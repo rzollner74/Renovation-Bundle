@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { ImapFlow } from 'imapflow';
+import ical from 'node-ical';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import fs from 'fs';
@@ -239,28 +240,61 @@ async function getApolloMetrics() {
   }
 }
 
-// Get Google Calendar events for today via the Hermes google-workspace skill.
+// Get today's Google Calendar events from a secret iCal (.ics) feed URL.
+// Set CALENDAR_ICS_URL in .env (Google Calendar > Settings > your calendar >
+// Integrate calendar > "Secret address in iCal format").
 // Returns { status, events, message } so the dashboard can explain failures.
 async function getCalendarEvents() {
-  const scriptPath = path.join(
-    process.env.HOME || '/root',
-    '.hermes/skills/productivity/google-workspace/scripts/google_api.py'
-  );
-
-  if (!fs.existsSync(scriptPath)) {
+  const url = process.env.CALENDAR_ICS_URL;
+  if (!url) {
     return {
       status: 'not_configured',
       events: [],
-      message: 'Google Workspace script not found on this machine — calendar not set up.',
+      message: 'Add CALENDAR_ICS_URL (secret iCal address) to your .env file.',
     };
   }
 
   try {
-    // macOS ships python3 (the bare "python" was removed). Allow an override.
-    const pythonBin = process.env.PYTHON_BIN || 'python3';
-    const { stdout } = await execAsync(`${pythonBin} "${scriptPath}" calendar list`);
-    const events = JSON.parse(stdout || '[]');
-    return { status: 'connected', events: events.slice(0, 5) }; // next 5 events
+    const data = await ical.async.fromURL(url);
+
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    const dayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+    const todays = [];
+    const addEvent = (ev, startDate) => {
+      const allDay = ev.datetype === 'date';
+      todays.push({
+        summary: ev.summary || '(no title)',
+        start: allDay
+          ? 'All day'
+          : startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        _sort: startDate.getTime(),
+      });
+    };
+
+    for (const key of Object.keys(data)) {
+      const ev = data[key];
+      if (!ev || ev.type !== 'VEVENT') continue;
+
+      if (ev.rrule) {
+        // Recurring event: expand occurrences that fall within today
+        const occurrences = ev.rrule.between(dayStart, dayEnd, true);
+        for (const occ of occurrences) {
+          // Honor cancelled instances (EXDATE)
+          const exKey = occ.toISOString().slice(0, 10);
+          if (ev.exdate && ev.exdate[exKey]) continue;
+          addEvent(ev, occ);
+        }
+      } else if (ev.start) {
+        const s = new Date(ev.start);
+        if (s >= dayStart && s <= dayEnd) addEvent(ev, s);
+      }
+    }
+
+    todays.sort((a, b) => a._sort - b._sort);
+    const events = todays.slice(0, 8).map(({ summary, start }) => ({ summary, start }));
+    return { status: 'connected', events };
   } catch (error) {
     console.error('Calendar error:', error.message);
     return { status: 'error', events: [], message: error.message.slice(0, 160) };
