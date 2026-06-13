@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🌅 Morning Dashboard</title>
+  <style>
+    :root {
+      --bg-primary: #0f0f0f;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #252525;
+      --text-primary: #ffffff;
+      --text-secondary: #b0b0b0;
+      --text-tertiary: #808080;
+
+      /* Bio-One: Orange & Black */
+      --b1-primary: #ff6b35;
+      --b1-dark: #2a2a2a;
+      --b1-light: #ffa500;
+
+      /* CMY: Green */
+      --cmy-primary: #2ecc71;
+      --cmy-dark: #27ae60;
+      --cmy-light: #52c77a;
+
+      /* Personal: Yellow */
+      --personal-primary: #f1c40f;
+      --personal-dark: #f39c12;
+      --personal-light: #f4d03f;
+
+      /* Generic accent (used by weather card) */
+      --accent-light: #4aa8ff;
+
+      --border: #333333;
+      --success: #2ecc71;
+      --error: #e74c3c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+
+    .app {
+      min-height: 100vh;
+      padding: 30px 20px;
+      background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+    }
+
+    .header {
+      margin-bottom: 50px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      margin-bottom: 8px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--b1-primary), var(--b1-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .timestamp {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+    }
+
+    .dashboard {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    /* Quote Card */
+    .quote-card {
+      margin-bottom: 50px;
+      background: linear-gradient(135deg, var(--b1-primary) 0%, var(--b1-light) 100%);
+      padding: 50px 40px;
+      border-radius: 16px;
+      text-align: center;
+      box-shadow: 0 10px 40px rgba(255, 107, 53, 0.3);
+      border: 1px solid rgba(255, 107, 53, 0.5);
+    }
+
+    .quote-text {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: white;
+      letter-spacing: 0.5px;
+    }
+
+    .quote-author {
+      font-size: 1rem;
+      color: rgba(255, 255, 255, 0.95);
+      font-style: italic;
+    }
+
+    /* Grid Layout */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      border-color: var(--border);
+    }
+
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+    }
+
+    /* Bio-One Cards */
+    .bio-one-card {
+      border-left: 4px solid var(--b1-primary);
+    }
+
+    .bio-one-card h2 {
+      color: var(--b1-primary);
+    }
+
+    .bio-one-accent {
+      color: var(--b1-primary);
+    }
+
+    /* CMY Cards */
+    .cmy-card {
+      border-left: 4px solid var(--cmy-primary);
+    }
+
+    .cmy-card h2 {
+      color: var(--cmy-primary);
+    }
+
+    .cmy-accent {
+      color: var(--cmy-primary);
+    }
+
+    /* Personal Cards */
+    .personal-card {
+      border-left: 4px solid var(--personal-primary);
+    }
+
+    .personal-card h2 {
+      color: var(--personal-primary);
+    }
+
+    .personal-accent {
+      color: var(--personal-primary);
+    }
+
+    /* Metrics */
+    .metric {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--bg-tertiary);
+    }
+
+    .metric:last-child {
+      border-bottom: none;
+    }
+
+    .label {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .value {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .value.small {
+      font-size: 0.95rem;
+    }
+
+    /* Weather Card */
+    .weather-card {
+      border-left: 4px solid var(--accent-light);
+    }
+
+    .weather-card h2 {
+      color: var(--accent-light);
+    }
+
+    .weather {
+      text-align: center;
+    }
+
+    .weather .temp {
+      font-size: 3rem;
+      font-weight: 700;
+      margin: 10px 0;
+      color: var(--text-primary);
+    }
+
+    .weather .condition {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      margin-bottom: 20px;
+    }
+
+    .weather .details {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .weather .details p {
+      font-size: 0.9rem;
+      color: var(--text-tertiary);
+    }
+
+    /* Reminders Sections */
+    .reminders-section {
+      margin-bottom: 20px;
+    }
+
+    .reminders-section h3 {
+      font-size: 1rem;
+      margin: 16px 0 12px 0;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--bg-tertiary);
+      font-weight: 600;
+    }
+
+    .reminder-item {
+      padding: 10px 0;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .reminder-item::before {
+      content: "•";
+      color: currentColor;
+      font-weight: bold;
+      margin-top: -2px;
+    }
+
+    /* Frequency Breakdown */
+    .frequency-breakdown {
+      border-top: 1px solid var(--bg-tertiary);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    .frequency-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      font-size: 0.95rem;
+    }
+
+    .frequency-label {
+      color: var(--text-secondary);
+    }
+
+    .frequency-count {
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+
+    .status-active {
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-pending {
+      background: #ffa500;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Cron Jobs */
+    .job {
+      padding: 12px;
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border-left: 3px solid var(--success);
+      font-size: 0.9rem;
+    }
+
+    .job-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .job-schedule {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-family: monospace;
+      margin-bottom: 6px;
+    }
+
+    .job-status {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--success);
+      gap: 6px;
+    }
+
+    .job-time {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    /* Loading State */
+    .loading {
+      text-align: center;
+      color: var(--text-secondary);
+      padding: 40px;
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 768px) {
+      .app {
+        padding: 20px 15px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .quote-card {
+        padding: 30px 20px;
+      }
+
+      .quote-text {
+        font-size: 1.3rem;
+      }
+
+      .weather .details {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div>
+        <h1>🌅 Good morning, Ryan</h1>
+        <div class="timestamp" id="timestamp"></div>
+      </div>
+    </div>
+
+    <div class="dashboard">
+      <!-- Quote Card -->
+      <div id="quote-container"></div>
+
+      <!-- Main Grid -->
+      <div class="grid" id="grid"></div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading">Loading your dashboard...</div>
+    </div>
+  </div>
+
+  <script>
+    // Convert cron expression to human-readable format.
+    // Defined at the top level of the script (NOT inside loadDashboard).
+    function readableCronExpression(expr) {
+      if (!expr) return '';
+
+      const parts = expr.split(' ');
+      if (parts.length < 5) return expr;
+
+      // Handle common patterns
+      if (expr === '0 0 * * *') return 'Daily at midnight';
+      if (expr === '0 9 * * *') return 'Daily at 9:00 AM';
+      if (expr === '0 9 1 * *') return 'Monthly at 9:00 AM';
+      if (expr === '0 9 1 */3 *') return 'Every 3 months at 9:00 AM';
+      if (expr === '0 */6 * * *') return 'Every 6 hours';
+      if (expr === '0 0 * * 1') return 'Weekly on Monday at midnight';
+      if (expr === '0 0 1 * *') return 'Monthly on the 1st at midnight';
+
+      // Fallback: return the expression as-is
+      return expr;
+    }
+
+    async function loadDashboard() {
+      try {
+        const response = await fetch('/api/dashboard');
+        const data = await response.json();
+
+        // Update timestamp
+        document.getElementById('timestamp').textContent =
+          new Date(data.timestamp).toLocaleString('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+        // Clear loading
+        document.getElementById('loading').style.display = 'none';
+
+        const grid = document.getElementById('grid');
+        grid.innerHTML = '';
+
+        // Quote Card
+        if (data.quote) {
+          const quoteContainer = document.getElementById('quote-container');
+          quoteContainer.innerHTML = ''; // Clear previous quote
+          const quoteCard = document.createElement('div');
+          quoteCard.className = 'quote-card';
+          quoteCard.innerHTML = `
+            <div class="quote-text">"${data.quote.text}"</div>
+            <div class="quote-author">— ${data.quote.author}</div>
+          `;
+          quoteContainer.appendChild(quoteCard);
+        }
+
+        // Weather Card
+        if (data.weather && !data.weather.error) {
+          const weather = document.createElement('section');
+          weather.className = 'card weather-card';
+          weather.innerHTML = `
+            <h2>🌤️ Weather</h2>
+            <div class="weather">
+              <div class="temp">${Math.round(data.weather.temp)}°F</div>
+              <div class="condition">${data.weather.condition}</div>
+              <div class="details">
+                <p>Feels like ${Math.round(data.weather.feelsLike)}°F</p>
+                <p>Humidity ${data.weather.humidity}%</p>
+                <p>Wind ${Math.round(data.weather.windSpeed)} mph</p>
+              </div>
+            </div>
+          `;
+          grid.appendChild(weather);
+        }
+
+        // CMY Watcher Card
+        if (data.cmyWatcher && !data.cmyWatcher.error) {
+          const cmy = document.createElement('section');
+          cmy.className = 'card cmy-card';
+          cmy.innerHTML = `
+            <h2>📦 Card My Yard</h2>
+            <div class="metric">
+              <div class="label">Orders Today</div>
+              <div class="value cmy-accent">${data.cmyWatcher.ordersToday || 0}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Accepted</div>
+              <div class="value cmy-accent">${data.cmyWatcher.acceptedToday || 0}</div>
+            </div>
+            <div class="frequency-breakdown">
+              <div class="frequency-row">
+                <span class="frequency-label">Daily</span>
+                <span class="frequency-count">${data.cmyWatcher.daily || 0}</span>
+              </div>
+              <div class="frequency-row">
+                <span class="frequency-label">Weekly</span>
+                <span class="frequency-count">${data.cmyWatcher.weekly || 0}${data.cmyWatcher.weeklyTotal ? ` (${data.cmyWatcher.weeklyTotal} total)` : ''}</span>
+              </div>
+              <div class="frequency-row">
+                <span class="frequency-label">Monthly</span>
+                <span class="frequency-count">${data.cmyWatcher.monthly || 0}${data.cmyWatcher.monthlyTotal ? ` (${data.cmyWatcher.monthlyTotal} total)` : ''}</span>
+              </div>
+            </div>
+            <div class="metric">
+              <div class="label">Status</div>
+              <div class="value small"><span class="status-indicator status-active"></span>Active</div>
+            </div>
+          `;
+          grid.appendChild(cmy);
+        }
+
+        // Reminders Card - Bio-One
+        if (data.reminders) {
+          const bioOne = document.createElement('section');
+          bioOne.className = 'card bio-one-card';
+          bioOne.innerHTML = `
+            <h2>🎯 Bio-One Reminders</h2>
+            <div class="reminders-section">
+              ${data.reminders.bioOne && data.reminders.bioOne.length > 0
+                ? data.reminders.bioOne.map(r => `<div class="reminder-item">${r.title}</div>`).join('')
+                : '<div class="reminder-item" style="color: var(--text-tertiary);">No reminders</div>'}
+            </div>
+          `;
+          grid.appendChild(bioOne);
+        }
+
+        // Reminders Card - CMY
+        if (data.reminders && data.reminders.cmy) {
+          const cmy = document.createElement('section');
+          cmy.className = 'card cmy-card';
+          cmy.innerHTML = `
+            <h2>🎯 CMY Reminders</h2>
+            <div class="reminders-section">
+              ${data.reminders.cmy && data.reminders.cmy.length > 0
+                ? data.reminders.cmy.map(r => `<div class="reminder-item">${r.title}</div>`).join('')
+                : '<div class="reminder-item" style="color: var(--text-tertiary);">No reminders</div>'}
+            </div>
+          `;
+          grid.appendChild(cmy);
+        }
+
+        // Reminders Card - Personal
+        if (data.reminders && data.reminders.personal) {
+          const personal = document.createElement('section');
+          personal.className = 'card personal-card';
+          personal.innerHTML = `
+            <h2>🎯 Personal Reminders</h2>
+            <div class="reminders-section">
+              ${data.reminders.personal && data.reminders.personal.length > 0
+                ? data.reminders.personal.map(r => `<div class="reminder-item">${r.title}</div>`).join('')
+                : '<div class="reminder-item" style="color: var(--text-tertiary);">No reminders</div>'}
+            </div>
+          `;
+          grid.appendChild(personal);
+        }
+
+        // Calendar Card
+        if (data.calendar !== undefined) {
+          const calendar = document.createElement('section');
+          calendar.className = 'card bio-one-card';
+          calendar.innerHTML = `
+            <h2>📅 Calendar</h2>
+            ${data.calendar && data.calendar.length > 0
+              ? data.calendar.map(event => `
+                  <div class="metric">
+                    <div class="label">${event.summary || event.title}</div>
+                    <div class="value small">${event.start || event.time}</div>
+                  </div>
+                `).join('')
+              : '<div class="reminder-item" style="color: var(--text-tertiary);">⏳ Connecting to Google Calendar...</div>'}
+          `;
+          grid.appendChild(calendar);
+        }
+
+        // Gmail Card
+        if (data.email) {
+          const gmail = document.createElement('section');
+          gmail.className = 'card bio-one-card';
+          const isConnected = data.email.status === 'connected';
+          gmail.innerHTML = `
+            <h2>📧 Gmail</h2>
+            <div class="metric">
+              <div class="label">Unread</div>
+              <div class="value bio-one-accent">${isConnected ? (data.email.unread || 0) : '⏳'}</div>
+            </div>
+            <div class="metric">
+              <div class="label">Status</div>
+              <div class="value small"><span class="status-indicator ${isConnected ? 'status-active' : 'status-pending'}"></span>${isConnected ? 'Connected' : 'Connecting...'}</div>
+            </div>
+          `;
+          grid.appendChild(gmail);
+        }
+
+        // Cron Jobs Card
+        if (data.cronStatus) {
+          const cron = document.createElement('section');
+          cron.className = 'card bio-one-card';
+          cron.innerHTML = `
+            <h2>⚙️ Cron Jobs</h2>
+            ${data.cronStatus.jobs && data.cronStatus.jobs.length > 0
+              ? data.cronStatus.jobs.map(job => `
+                  <div class="job">
+                    <div class="job-name">${job.name}</div>
+                    <div class="job-schedule">${readableCronExpression(job.schedule && job.schedule.expr ? job.schedule.expr : job.schedule)}</div>
+                    <div class="job-status">
+                      <span class="status-indicator ${job.status === 'active' ? 'status-active' : 'status-pending'}"></span>
+                      ${job.status === 'active' ? '✅ Active' : '⏳ ' + job.status}
+                    </div>
+                  </div>
+                `).join('')
+              : '<div style="color: var(--text-tertiary); padding: 10px 0;">No active jobs</div>'}
+          `;
+          grid.appendChild(cron);
+        }
+
+        // Apollo Card
+        if (data.apollo) {
+          const apollo = document.createElement('section');
+          apollo.className = 'card bio-one-card';
+          const apolloConnected = data.apollo.status === 'connected';
+          apollo.innerHTML = `
+            <h2>🚀 Apollo Sequences</h2>
+            <div class="metric">
+              <div class="label">Status</div>
+              <div class="value small">${apolloConnected ? '✅ Connected' : '⏳ Initializing...'}</div>
+            </div>
+            ${data.apollo.message ? `<div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">${data.apollo.message}</div>` : ''}
+          `;
+          grid.appendChild(apollo);
+        }
+
+      } catch (error) {
+        console.error('Dashboard error:', error);
+        document.getElementById('loading').innerHTML = '❌ Error loading dashboard. Check console.';
+      }
+    }
+
+    // Load on page load
+    loadDashboard();
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadDashboard, 30000);
+  </script>
+</body>
+</html>
